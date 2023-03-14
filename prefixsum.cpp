@@ -3,7 +3,7 @@
 #include <cilk/cilk.h>
 #include <cilk/cilk_api.h>
 
-using namespace std;
+using namespace std;//
 
 void prefix_sum(double* arr, int n, int p) {
     int block_size = n / p;
