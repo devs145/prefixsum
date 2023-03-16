@@ -1,39 +1,47 @@
 #include <iostream>
-#include <cmath> 
-#include <cstdio>
+#include <cstdlib>
+#include <cilk/cilk.h>
+#include <cilk/cilk_api.h>
 
 using namespace std;
 
-#include <random>
-
-double* generateRandomArray(int N, double M) {
-    // set up random number generator
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-M, M);
-
-    // generate the array
-    double* array = new double[N];
-    for (int i = 0; i < N; ++i) {
-        array[i] = dis(gen);
+void prefix_sum(double* arr, int n, int p) {
+    int block_size = n / p;
+    double* block_sums = new double[p];
+    cilk_for(int i = 0; i < p; i++) {
+        double sum = 0;
+        for (int j = i * block_size; j < (i + 1) * block_size; j++) {
+            sum += arr[j];
+            arr[j] = sum;
+        }
+        block_sums[i] = sum;
     }
-
-    return array;
+    if (p > 1) {
+        prefix_sum(block_sums, p, p / 2);
+        cilk_for(int i = 1; i < p; i++) {
+            int block_start = i * block_size;
+            arr[block_start] += block_sums[i - 1];
+        }
+    }
+    delete[] block_sums;
 }
 
-
-int main() {
-    // generate the array with default values
-    double* array = generateRandomArray(1000000, 100.0);
-
-    // print the array
-    for (int i = 0; i < 1000000; ++i) {
-        std::cout << array[i] << " ";
+int main(int argc, char* argv[]) {
+    int n = 1000000;
+    if (argc > 1) {
+        n = atoi(argv[1]);
     }
-    std::cout << std::endl;
-
-    // free the memory
-    delete[] array;
-
+    double* arr = new double[n];
+    double M = 100.0;
+    srand(time(NULL));
+    for (int i = 0; i < n; i++) {
+        arr[i] = (double)rand() / RAND_MAX * 2 * M - M;
+    }
+    prefix_sum(arr, n, __cilkrts_get_nworkers());
+    for (int i = 0; i < n; i++) {
+        cout << arr[i] << " ";
+    }
+    cout << endl;
+    delete[] arr;
     return 0;
 }
