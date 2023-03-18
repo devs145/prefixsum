@@ -9,79 +9,92 @@ using namespace std;
 // Variables used in the functions
 int first, last;
 
-// Split input array into p chunks and return vector of sub-arrays
+/*
+The following function splits up the input array.
+@param n, p and the input array are being passed in.
+@returns the vector which consits of subarrays.
+*/
 vector<vector<double>>mydividedarray(int n, int p, double* myarray) {
   int myarraysize = ceil((double)n/p);
-  std::vector<std::vector<double>>myvector(p);
-  // Here we split up the array and return the vector of subarrays
+  vector<std::vector<double>>myvector(p);
   cilk_scope {
-     for (int i = 0; i < p; i++) {
-        first = i * myarraysize;
-        last = i + 1 * myarraysize;
-        myvector[i].resize(last - first);
-        for (int j = first; j < last; j++) {
-            myvector[i][j - first] = myarray[j];
-        }
+    for (int i = 0; i < p; i++) {
+      first = i * myarraysize;
+      last = i + 1 * myarraysize;
+      myvector[i].resize(last - first);
+      for (int j = first; j < last; j++) {
+        myvector[i][j - first] = myarray[j];
+      }
     }
   }
   return myvector;
 }
 
-// Perform prefix sum on a subarray by adding the last element of the previous subarray to the first element of the current subarray
-void prefix_sum(vector<double>& sub_array, double lastnumber) {
+/* 
+Perform prefix sum on the subarrays by adding the last element 
+of the previous subarray to the first element of the current subarray.
+@param subarray, and lastnumber are being passed in.
+*/
+void prefixsum(vector<double>&mysubarray, double lastnumber) {
   cilk_scope {
-    for (int i = 0; i < sub_array.size(); i++) {
-        sub_array[i] = sub_array[i] + lastnumber;
-        lastnumber = lastnumber +  sub_array[i];
+    for (int i = 0; i < mysubarray.size(); i++) {
+      mysubarray[i] = mysubarray[i] + lastnumber;
+      lastnumber = lastnumber +  mysubarray[i];
     }
   }
 }
 
+
 int main (int argc, char *argv[]) {
-    //long n = pow(10, 6);
-    //if (argc > 1) {
-      //  n = atol(argv[1]);
-   // }
-
-
-  double arr[] = {1,2,3,4,5,6,7,8,9,10};
-    
-
   double lastnumber = 0;
-  int p = 5;
-  int n = 10;
-  
+  int p = 10;
+  int n = 5;
+    
+  if (argc > 1) {
+    p = atol(argv[1]);
+  }
+  double arr[p];
+
+  for (int i = 0; i < p; i++) {
+    //arr[i] = rand() - RAND_MAX / 2 ; // 
+    arr[i] = rand() % 200 - 100; 
+  }
+
+  cout << "Prior Computation: " << endl;
+  for (int j = 0; j < p; j++) {
+    cout << arr[j] << " ";
+  }
+  cout << endl;
+
   ctimer_t t;
   ctimer_start(&t);
-
-  vector<vector<double>> sub_arrays = mydividedarray(n, p, arr);
+  vector<vector<double>> mysubarray = mydividedarray(n, p, arr);
 
   // Perform prefix sum on each subarray
      
-    for (int i = 0; i < p; ++i) {
-        prefix_sum(sub_arrays[i], lastnumber);
-        if (i < p - 1) {
-        lastnumber = sub_arrays[i][sub_arrays[i].size() -1];
-        }
+  for (int i = 0; i < p; ++i) {
+    prefixsum(mysubarray[i], lastnumber);
+    if (i < p - 1) {
+      lastnumber = mysubarray[i][mysubarray[i].size() -1];
     }
+  }
 
-    ctimer_stop(&t);
-    ctimer_measure(&t);
+  ctimer_stop(&t);
+  ctimer_measure(&t);
 
   // Combine sub-arrays into one output array
-  std::vector<double> output_array;
-  for (int i = 0; i < p; ++i) {
-    output_array.insert(output_array.end(), sub_arrays[i].begin(), sub_arrays[i].end());
+  vector<double> prefixsumvector;
+  for (int i = 0; i < p; i++) {
+    prefixsumvector.insert(prefixsumvector.end(), mysubarray[i].begin(), mysubarray[i].end());
   }
 
-  // Print output array
-  std::cout << "Output array: ";
-  for (int i = 0; i < output_array.size(); ++i) {
-    std::cout << output_array[i] << " ";
+  // Print the prefix sum
+  cout << "Prefix Sum: " << endl;
+  for (int i = 0; i < prefixsumvector.size(); ++i) {
+    cout << prefixsumvector[i] << " ";
   }
-     ctimer_print(t, "Prefix");
 
+  cout << endl;
+  ctimer_print(t, "Prefix");
   return 0;
 }
-// SO we have taken a array, than split it into many subarrays, after than we have computed the prefix sum also we return to the user the final prefix sum
-// we just neeed to see what robert is looking for in terms of the output.
