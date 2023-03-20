@@ -72,7 +72,7 @@ int main (int argc, char *argv[]) {
 
   // Perform prefix sum on each subarray
      
-  for (int i = 0; i < p; ++i) {
+  for (int i = 0; i < p; i++) {
     prefixsum(mysubarray[i], lastnumber);
     if (i < p - 1) {
       lastnumber = mysubarray[i][mysubarray[i].size() -1];
@@ -90,7 +90,7 @@ int main (int argc, char *argv[]) {
 
   // Print the prefix sum
   cout << "Prefix Sum: " << endl;
-  for (int i = 0; i < prefixsumvector.size(); ++i) {
+  for (int i = 0; i < prefixsumvector.size(); i++) {
     cout << prefixsumvector[i] << " ";
   }
 
