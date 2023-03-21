@@ -72,7 +72,7 @@ int main (int argc, char *argv[]) {
   }
   cout << endl;
   /*
-  Here we are using the ctimer.h library and starting our timer prior to calling the function 
+  Here we are using the ctimer.h header file from the tutorial and starting our timer prior to calling the function 
   which is responsible for dividing the array. Also the function which computes the prefix sum of the subarrays.
   */
   ctimer_t t;
